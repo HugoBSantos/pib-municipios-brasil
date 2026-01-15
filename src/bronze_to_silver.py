@@ -29,7 +29,7 @@ def create_silver():
             FROM read_xlsx(
                 '{BRONZE_PATH}',
                 sheet='{bronze_sheet}',
-                range='A4:W5601',
+                range='A3:W5601',
                 header=true,
                 all_varchar=true
             );
