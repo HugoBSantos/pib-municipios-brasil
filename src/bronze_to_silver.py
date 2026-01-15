@@ -45,16 +45,16 @@ def create_silver():
     ##### Silver #####
     with open(SILVER_DDL_PATH, mode="r") as f:
         conn.execute(f.read())
-        
+    
     conn.execute(f"""
         CREATE TABLE IF NOT EXISTS silver.dim_municipio AS (
             WITH municipios AS (
                 SELECT
                     ROW_NUMBER() OVER() AS municipio_id,
-                    SUBSTRING(C0 FROM 1 FOR LENGTH(C0) - 5) AS nome_municipio,
-                    RIGHT(C0, 3)[1:2] AS sigla_uf
+                    SUBSTRING(localidade FROM 1 FOR LENGTH(localidade) - 5) AS nome_municipio,
+                    RIGHT(localidade, 3)[1:2] AS sigla_uf
                 FROM bronze.pib
-                WHERE C0 LIKE '%)'
+                WHERE localidade LIKE '%)'
             )
             
             SELECT
@@ -67,5 +67,3 @@ def create_silver():
             FROM municipios m
         )
     """)
-
-    conn.sql(f"SELECT DISTINCT uf_id FROM silver.dim_municipio ORDER BY uf_id").show()
