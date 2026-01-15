@@ -67,3 +67,39 @@ def create_silver():
             FROM municipios m
         )
     """)
+    
+    anos_cols = [f"ano_{y}" for y in range(2002, 2024)]
+    
+    for s in sheets.keys():
+        bronze_table = f"bronze.{s}"
+        silver_table = f"silver.fact_{s}"
+        valor_col = f"valor_{s}"
+        
+        conn.execute(f"""
+            CREATE OR REPLACE TABLE {silver_table} AS (
+                WITH bronze_unpivot AS (
+                    SELECT *
+                    FROM {bronze_table}
+                    UNPIVOT (valor FOR coluna_ano IN ({", ".join(anos_cols)}))
+                )
+                
+                SELECT
+                    m.municipio_id,
+                    t.ano_id,
+                    CASE
+                        WHEN valor = '...' THEN NULL
+                        ELSE CAST(valor AS DOUBLE)
+                    END AS {valor_col}
+                FROM bronze_unpivot u
+                JOIN silver.dim_municipio m
+                    ON m.nome_municipio =
+                       SUBSTRING(u.localidade FROM 1 FOR LENGTH(u.localidade) - 5)
+                JOIN silver.dim_tempo t
+                    ON t.ano = CAST(REPLACE(u.coluna_ano, 'ano_', '') AS INTEGER)
+                WHERE u.localidade LIKE '%)'
+            )
+        """)
+        
+        conn.execute(f"DROP TABLE {bronze_table}")
+    
+    conn.execute("DROP SCHEMA bronze")
