@@ -60,14 +60,10 @@ def create_silver():
             SELECT
                 m.municipio_id,
                 m.nome_municipio,
-                CASE
-                    WHEN m.sigla_uf IS NOT NULL
-                    THEN (
-                        SELECT u.uf_id
-                        FROM silver.dim_uf u
-                        WHERE u.sigla_uf = m.sigla_uf
-                    )
-                END AS uf_id
+                (SELECT u.uf_id
+                FROM silver.dim_uf u
+                WHERE u.sigla_uf = m.sigla_uf)
+                AS uf_id
             FROM municipios m
         )
     """)
