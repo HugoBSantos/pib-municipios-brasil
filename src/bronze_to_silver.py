@@ -25,7 +25,14 @@ def create_silver():
         
         conn.execute(f"""
             CREATE OR REPLACE TABLE {bronze_table} AS
-            SELECT *
+            SELECT 
+                "Unidade da Federação e Município" AS localidade,
+                Ano AS ano_2002,
+                C2 AS ano_2003,
+                "_1" AS ano_2004, "_2" AS ano_2005, "_3" AS ano_2006, "_4" AS ano_2007, "_5" AS ano_2008,
+                "_6" AS ano_2009, "_7" AS ano_2010, "_8" AS ano_2011, "_9" AS ano_2012, "_10" AS ano_2013,
+                "_11" AS ano_2014, "_12" AS ano_2015, "_13" AS ano_2016, "_14" AS ano_2017, "_15" AS ano_2018,
+                "_16" AS ano_2019, "_17" AS ano_2020, "_18" AS ano_2021, "_19" AS ano_2022, "_20" AS ano_2023
             FROM read_xlsx(
                 '{BRONZE_PATH}',
                 sheet='{bronze_sheet}',
