@@ -53,7 +53,6 @@ def create_silver():
         CREATE TABLE IF NOT EXISTS silver.dim_municipio AS (
             WITH municipios AS (
                 SELECT
-                    ROW_NUMBER() OVER() AS municipio_id,
                     SUBSTRING(localidade FROM 1 FOR LENGTH(localidade) - 5) AS nome_municipio,
                     RIGHT(localidade, 3)[1:2] AS sigla_uf
                 FROM bronze.pib
@@ -61,12 +60,15 @@ def create_silver():
             )
             
             SELECT
-                m.municipio_id,
+                ROW_NUMBER() OVER(
+                    ORDER BY m.nome_municipio, u.uf_id
+                ) AS municipio_id,
                 m.nome_municipio,
                 u.uf_id
             FROM municipios m
             JOIN silver.dim_uf u
                 ON u.sigla_uf = m.sigla_uf
+            GROUP BY m.nome_municipio, u.uf_id
         )
     """)
     
