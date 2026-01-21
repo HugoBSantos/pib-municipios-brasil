@@ -13,7 +13,6 @@ def create_silver():
     conn.execute("INSTALL excel; LOAD excel;")
     
     ##### Bronze (Temp) #####
-    conn.execute("CREATE SCHEMA IF NOT EXISTS bronze")
     
     wb = load_workbook(filename=BRONZE_PATH, read_only=True, keep_links=False)
     sheets = {
@@ -23,11 +22,11 @@ def create_silver():
     }
     
     for k, v in sheets.items():
-        bronze_table = f"bronze.{k}"
+        bronze_table = f"bronze_{k}"
         bronze_sheet = v
         
         conn.execute(f"""
-            CREATE OR REPLACE TABLE {bronze_table} AS
+            CREATE TEMPORARY TABLE {bronze_table} AS
             SELECT 
                 "Unidade da Federação e Município" AS localidade,
                 Ano AS ano_2002,
@@ -55,7 +54,7 @@ def create_silver():
                 SELECT
                     SUBSTRING(localidade FROM 1 FOR LENGTH(localidade) - 5) AS nome_municipio,
                     RIGHT(localidade, 3)[1:2] AS sigla_uf
-                FROM bronze.pib
+                FROM bronze_pib
                 WHERE localidade LIKE '%)'
             )
             
@@ -75,7 +74,7 @@ def create_silver():
     anos_cols = [f"ano_{y}" for y in range(2002, 2024)]
     
     for s in sheets.keys():
-        bronze_table = f"bronze.{s}"
+        bronze_table = f"bronze_{s}"
         silver_table = f"silver.fact_{s}"
         valor_col = f"valor_{s}"
         
@@ -113,10 +112,6 @@ def create_silver():
                     ON t.ano = CAST(REPLACE(b.coluna_ano, 'ano_', '') AS INTEGER)
             )
         """)
-        
-        conn.execute(f"DROP TABLE {bronze_table}")
-    
-    conn.execute("DROP SCHEMA bronze")
     
     END_TIME = time()
     
