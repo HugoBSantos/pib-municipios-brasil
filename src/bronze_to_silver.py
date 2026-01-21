@@ -1,11 +1,14 @@
 import duckdb
 from openpyxl import load_workbook
+from time import time
 
 BRONZE_PATH = "data/bronze/tabela5938.xlsx"
 SILVER_DDL_PATH = "sql/ddl/create_silver.sql"
 
 def create_silver():
-
+    
+    START_TIME = time()
+    
     conn = duckdb.connect(":memory:")
     conn.execute("INSTALL excel; LOAD excel;")
     
@@ -102,3 +105,7 @@ def create_silver():
         conn.execute(f"DROP TABLE {bronze_table}")
     
     conn.execute("DROP SCHEMA bronze")
+    
+    END_TIME = time()
+    
+    print(f"[SUCCESS] Bronze -> Silver process finished successfully in {END_TIME - START_TIME:.2f} seconds!")
