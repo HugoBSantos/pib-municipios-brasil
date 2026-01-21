@@ -85,22 +85,32 @@ def create_silver():
                     SELECT *
                     FROM {bronze_table}
                     UNPIVOT (valor FOR coluna_ano IN ({", ".join(anos_cols)}))
+                    WHERE localidade LIKE '%)'
+                ),
+                
+                municipio_uf AS (
+                    SELECT
+                        m.municipio_id,
+                        m.nome_municipio,
+                        u.sigla_uf
+                    FROM silver.dim_municipio m
+                    JOIN silver.dim_uf u
+                        ON u.uf_id = m.uf_id
                 )
                 
                 SELECT
                     m.municipio_id,
                     t.ano_id,
                     CASE
-                        WHEN valor = '...' THEN NULL
-                        ELSE CAST(valor AS DOUBLE)
+                        WHEN b.valor = '...' THEN NULL
+                        ELSE CAST(b.valor AS DOUBLE)
                     END AS {valor_col}
-                FROM bronze_unpivot u
-                JOIN silver.dim_municipio m
-                    ON m.nome_municipio =
-                       SUBSTRING(u.localidade FROM 1 FOR LENGTH(u.localidade) - 5)
+                FROM bronze_unpivot b
+                JOIN municipio_uf m
+                    ON m.nome_municipio = SUBSTRING(b.localidade FROM 1 FOR LENGTH(b.localidade) - 5)
+                    AND m.sigla_uf = RIGHT(b.localidade, 3)[1:2]
                 JOIN silver.dim_tempo t
-                    ON t.ano = CAST(REPLACE(u.coluna_ano, 'ano_', '') AS INTEGER)
-                WHERE u.localidade LIKE '%)'
+                    ON t.ano = CAST(REPLACE(b.coluna_ano, 'ano_', '') AS INTEGER)
             )
         """)
         
