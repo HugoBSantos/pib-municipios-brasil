@@ -21,6 +21,8 @@ def create_silver():
         "valor_add": wb.sheetnames[2]
     }
     
+    print(f"[INFO] Reading raw data from {BRONZE_PATH}...")
+    
     for k, v in sheets.items():
         bronze_table = f"bronze_{k}"
         bronze_sheet = v
@@ -43,8 +45,13 @@ def create_silver():
                 all_varchar=true
             );
         """)
+        
+    print("[INFO] Created bronze layer as temporary tables.")
     
     ##### Silver #####
+    
+    print("[INFO] Creating dimensional tables for silver layer...")
+    
     with open(SILVER_DDL_PATH, mode="r") as f:
         conn.execute(f.read())
     
@@ -70,6 +77,8 @@ def create_silver():
             GROUP BY m.nome_municipio, u.uf_id
         )
     """)
+    
+    print("[INFO] Creating factual tables for silver layer...")
     
     anos_cols = [f"ano_{y}" for y in range(2002, 2024)]
     
