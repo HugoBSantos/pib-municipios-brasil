@@ -108,7 +108,7 @@ def create_silver():
                 
                 SELECT
                     m.municipio_id,
-                    t.ano_id,
+                    a.ano_id,
                     CASE
                         WHEN b.valor = '...' THEN NULL
                         ELSE CAST(b.valor AS DOUBLE)
@@ -117,8 +117,8 @@ def create_silver():
                 JOIN municipio_uf m
                     ON m.nome_municipio = SUBSTRING(b.localidade FROM 1 FOR LENGTH(b.localidade) - 5)
                     AND m.sigla_uf = RIGHT(b.localidade, 3)[1:2]
-                JOIN silver.dim_tempo t
-                    ON t.ano = CAST(REPLACE(b.coluna_ano, 'ano_', '') AS INTEGER)
+                JOIN silver.dim_ano a
+                    ON a.ano = CAST(REPLACE(b.coluna_ano, 'ano_', '') AS INTEGER)
             )
         """)
     

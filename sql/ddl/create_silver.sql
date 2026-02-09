@@ -36,7 +36,7 @@ CREATE TABLE IF NOT EXISTS silver.dim_uf AS (
     ) AS t(sigla_uf, nome_uf)
 );
 
-CREATE TABLE IF NOT EXISTS silver.dim_tempo AS (
+CREATE TABLE IF NOT EXISTS silver.dim_ano AS (
     SELECT
         ROW_NUMBER() OVER() AS ano_id,
         *
