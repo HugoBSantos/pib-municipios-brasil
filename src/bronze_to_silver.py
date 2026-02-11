@@ -23,20 +23,24 @@ def create_silver():
     
     print(f"[INFO] Reading raw data from {BRONZE_PATH}...")
     
+                                    # "_1", "_2", ... "_20"
+    old_anos_cols = ["Ano", "C2"] + [f"\"_{x}\"" for x in range(1,21)]
+    new_anos_cols = [f"ano_{y}" for y in range(2002, 2024)]
+    
+    assert len(old_anos_cols) == len(new_anos_cols)
+    
     for k, v in sheets.items():
         bronze_table = f"bronze_{k}"
         bronze_sheet = v
         
         conn.execute(f"""
             CREATE TEMPORARY TABLE {bronze_table} AS
-            SELECT 
+            SELECT
                 "Unidade da Federação e Município" AS localidade,
-                Ano AS ano_2002,
-                C2 AS ano_2003,
-                "_1" AS ano_2004, "_2" AS ano_2005, "_3" AS ano_2006, "_4" AS ano_2007, "_5" AS ano_2008,
-                "_6" AS ano_2009, "_7" AS ano_2010, "_8" AS ano_2011, "_9" AS ano_2012, "_10" AS ano_2013,
-                "_11" AS ano_2014, "_12" AS ano_2015, "_13" AS ano_2016, "_14" AS ano_2017, "_15" AS ano_2018,
-                "_16" AS ano_2019, "_17" AS ano_2020, "_18" AS ano_2021, "_19" AS ano_2022, "_20" AS ano_2023
+                {", ".join([
+                    f"{old_anos_cols[i]} AS {new_anos_cols[i]}"
+                    for i in range(len(old_anos_cols))
+                ])}
             FROM read_xlsx(
                 '{BRONZE_PATH}',
                 sheet='{bronze_sheet}',
@@ -80,8 +84,6 @@ def create_silver():
     
     print("[INFO] Creating factual tables for silver layer...")
     
-    anos_cols = [f"ano_{y}" for y in range(2002, 2024)]
-    
     for s in sheets.keys():
         bronze_table = f"bronze_{s}"
         silver_table = f"silver.fact_{s}"
@@ -92,7 +94,7 @@ def create_silver():
                 WITH bronze_unpivot AS (
                     SELECT *
                     FROM {bronze_table}
-                    UNPIVOT (valor FOR coluna_ano IN ({", ".join(anos_cols)}))
+                    UNPIVOT (valor FOR coluna_ano IN ({", ".join(new_anos_cols)}))
                     WHERE localidade LIKE '%)'
                 ),
                 
