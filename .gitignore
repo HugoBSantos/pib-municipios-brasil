@@ -1,4 +1,5 @@
 .venv/
 __pycache__/
+notebooks/
 
 .~lock.tabela5938.xlsx#
