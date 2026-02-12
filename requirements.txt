@@ -1,3 +1,4 @@
 duckdb
 openpyxl
 python-dotenv
+psycopg[binary]
