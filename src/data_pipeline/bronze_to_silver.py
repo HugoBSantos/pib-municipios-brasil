@@ -3,7 +3,9 @@ from openpyxl import load_workbook
 from time import time
 
 BRONZE_PATH = "data/bronze/tabela5938.xlsx"
-SILVER_DDL_PATH = "sql/ddl/create_silver.sql"
+SILVER_CREATE_PATH = "sql/ddl/create_silver.sql"
+SILVER_TRUNC_PATH = "sql/ddl/truncate_silver.sql"
+SILVER_DML_PATH = "sql/dml/silver_dml.sql"
 
 def create_silver():
     
@@ -54,10 +56,11 @@ def create_silver():
     
     ##### Silver #####
     
-    print("[INFO] Creating dimensional tables for silver layer...")
+    print("[INFO] Creating tables for silver layer...")
     
-    with open(SILVER_DDL_PATH, mode="r") as f:
-        conn.execute(f.read())
+    for path in [SILVER_CREATE_PATH, SILVER_DML_PATH]:
+        with open(path, mode="r") as f:
+            conn.execute(f.read())
     
     conn.execute(f"""
         CREATE TABLE IF NOT EXISTS silver.dim_municipio AS (
