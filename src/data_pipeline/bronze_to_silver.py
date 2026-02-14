@@ -63,8 +63,8 @@ def create_silver():
             conn.execute(f.read())
     
     conn.execute(f"""
-        CREATE TABLE IF NOT EXISTS silver.dim_municipio AS (
-            WITH municipios AS (
+        CREATE TABLE IF NOT EXISTS silver.municipios AS (
+            WITH municipio AS (
                 SELECT
                     SUBSTRING(localidade FROM 1 FOR LENGTH(localidade) - 5) AS nome_municipio,
                     RIGHT(localidade, 3)[1:2] AS sigla_uf
@@ -78,8 +78,8 @@ def create_silver():
                 ) AS municipio_id,
                 m.nome_municipio,
                 u.uf_id
-            FROM municipios m
-            JOIN silver.dim_uf u
+            FROM municipio m
+            JOIN silver.ufs u
                 ON u.sigla_uf = m.sigla_uf
             GROUP BY m.nome_municipio, u.uf_id
         )
@@ -106,8 +106,8 @@ def create_silver():
                         m.municipio_id,
                         m.nome_municipio,
                         u.sigla_uf
-                    FROM silver.dim_municipio m
-                    JOIN silver.dim_uf u
+                    FROM silver.municipios m
+                    JOIN silver.ufs u
                         ON u.uf_id = m.uf_id
                 )
                 
@@ -122,7 +122,7 @@ def create_silver():
                 JOIN municipio_uf m
                     ON m.nome_municipio = SUBSTRING(b.localidade FROM 1 FOR LENGTH(b.localidade) - 5)
                     AND m.sigla_uf = RIGHT(b.localidade, 3)[1:2]
-                JOIN silver.dim_ano a
+                JOIN silver.anos a
                     ON a.ano = CAST(REPLACE(b.coluna_ano, 'ano_', '') AS INTEGER)
             )
         """)
