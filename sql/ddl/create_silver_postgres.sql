@@ -56,3 +56,8 @@ CREATE TABLE IF NOT EXISTS silver.valor_adicionado (
     CONSTRAINT fk_add_mun FOREIGN KEY (municipio_id) REFERENCES silver.municipios (municipio_id),
     CONSTRAINT fk_add_ano FOREIGN KEY (ano_id) REFERENCES silver.anos (ano_id)
 );
+
+TRUNCATE TABLE
+    silver.anos,
+    silver.ufs
+CASCADE;
