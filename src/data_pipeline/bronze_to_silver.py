@@ -14,45 +14,44 @@ def create_silver():
     conn = duckdb.connect(":memory:")
     conn.execute("INSTALL excel; LOAD excel;")
     
-    ##### Bronze (Temp) #####
-    
-    wb = load_workbook(filename=BRONZE_PATH, read_only=True, keep_links=False)
-    sheets = {
-        "pib": wb.sheetnames[0],
-        "imp": wb.sheetnames[1],
-        "valor_add": wb.sheetnames[2]
-    }
-    
-    print(f"[INFO] Reading raw data from {BRONZE_PATH}...")
-    
+    ##### Bronze #####
                                     # "_1", "_2", ... "_20"
     old_anos_cols = ["Ano", "C2"] + [f"\"_{x}\"" for x in range(1,21)]
     new_anos_cols = [f"ano_{y}" for y in range(2002, 2024)]
     
     assert len(old_anos_cols) == len(new_anos_cols)
     
-    for k, v in sheets.items():
-        bronze_table = f"bronze_{k}"
-        bronze_sheet = v
-        
-        conn.execute(f"""
-            CREATE TEMPORARY TABLE {bronze_table} AS
-            SELECT
-                "Unidade da Federação e Município" AS localidade,
-                {", ".join([
-                    f"{old_anos_cols[i]} AS {new_anos_cols[i]}"
-                    for i in range(len(old_anos_cols))
-                ])}
-            FROM read_xlsx(
-                '{BRONZE_PATH}',
-                sheet='{bronze_sheet}',
-                range='A3:W5601',
-                header=true,
-                all_varchar=true
-            );
-        """)
-        
-    print("[INFO] Created bronze layer as temporary tables.")
+    print(f"[INFO] Reading raw data from {BRONZE_PATH}...")
+    conn.execute("CREATE SCHEMA bronze")
+    
+    wb = load_workbook(filename=BRONZE_PATH, read_only=True, keep_links=False)
+    
+    try:
+        for table, sheet in {
+            "pib": wb.sheetnames[0],
+            "impostos": wb.sheetnames[1],
+            "valor_adicionado": wb.sheetnames[2]
+        }.items():
+            bronze_table = f"bronze.{table}"
+            
+            conn.execute(f"""
+                CREATE TABLE {bronze_table} AS
+                SELECT
+                    "Unidade da Federação e Município" AS localidade,
+                    {", ".join([
+                        f"{old_anos_cols[i]} AS {new_anos_cols[i]}"
+                        for i in range(len(old_anos_cols))
+                    ])}
+                FROM read_xlsx(
+                    '{BRONZE_PATH}',
+                    sheet='{sheet}',
+                    range='A3:W5601',
+                    header=true,
+                    all_varchar=true
+                );
+            """)
+    finally:
+        wb.close()
     
     ##### Silver #####
     
