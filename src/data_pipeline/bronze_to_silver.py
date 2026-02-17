@@ -61,26 +61,26 @@ def create_silver():
             conn.execute(f.read())
     
     conn.execute(f"""
-        CREATE TABLE IF NOT EXISTS silver.municipios AS (
-            WITH municipio AS (
-                SELECT
-                    SUBSTRING(localidade FROM 1 FOR LENGTH(localidade) - 5) AS nome_municipio,
-                    RIGHT(localidade, 3)[1:2] AS sigla_uf
-                FROM bronze_pib
-                WHERE localidade LIKE '%)'
-            )
-            
+        WITH municipio AS (
             SELECT
-                ROW_NUMBER() OVER(
-                    ORDER BY m.nome_municipio, u.uf_id
-                ) AS municipio_id,
-                m.nome_municipio,
-                u.uf_id
-            FROM municipio m
-            JOIN silver.ufs u
-                ON u.sigla_uf = m.sigla_uf
-            GROUP BY m.nome_municipio, u.uf_id
+                SUBSTRING(localidade FROM 1 FOR LENGTH(localidade) - 5) AS nome_municipio,
+                RIGHT(localidade, 3)[1:2] AS sigla_uf
+            FROM bronze.pib
+            WHERE localidade LIKE '%)'
         )
+        
+        INSERT INTO
+            silver.municipios
+        SELECT
+            ROW_NUMBER() OVER(
+                ORDER BY m.nome_municipio, u.uf_id
+            ) AS municipio_id,
+            m.nome_municipio,
+            u.uf_id
+        FROM municipio m
+        JOIN silver.ufs u
+            ON u.sigla_uf = m.sigla_uf
+        GROUP BY m.nome_municipio, u.uf_id
     """)
     
     print("[INFO] Creating factual tables for silver layer...")
