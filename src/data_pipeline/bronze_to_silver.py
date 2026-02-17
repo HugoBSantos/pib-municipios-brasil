@@ -83,12 +83,14 @@ def create_silver():
         GROUP BY m.nome_municipio, u.uf_id
     """)
     
-    print("[INFO] Creating factual tables for silver layer...")
-    
-    for s in sheets.keys():
-        bronze_table = f"bronze_{s}"
-        silver_table = f"silver.fact_{s}"
-        valor_col = f"valor_{s}"
+    for table, col in {
+        "pib": "pib",
+        "impostos": "imp",
+        "valor_adicionado": "add"
+    }.items():
+        bronze_table = f"bronze.{table}"
+        silver_table = f"silver.{table}"
+        valor_col = f"valor_{col}"
         
         conn.execute(f"""
             CREATE OR REPLACE TABLE {silver_table} AS (
