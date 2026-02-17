@@ -1,6 +1,7 @@
 import duckdb
 from openpyxl import load_workbook
 from time import time
+from src.data_pipeline.data_loading import load_to_postgres
 
 BRONZE_PATH = "data/bronze/tabela5938.xlsx"
 SILVER_DDL_PATH = "sql/ddl/create_silver_duckdb.sql"
@@ -126,6 +127,18 @@ def create_silver():
                     ON a.ano = CAST(REPLACE(b.coluna_ano, 'ano_', '') AS INTEGER)
             )
         """)
+    
+    print("[INFO] Loading data to PostgreSQL...")
+    
+    try:
+        load_to_postgres(
+            connection=conn,
+            schema="silver",
+            tables=["anos", "ufs", "municipios", "pib", "impostos", "valor_adicionado"]
+        )
+    except Exception as e:
+        print(f"[ERROR] {e}")
+        raise
     
     END_TIME = time()
     
